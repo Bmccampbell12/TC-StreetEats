@@ -18,7 +18,7 @@ const TruckSearch = () => {
 useEffect(() => {
     const fetchTrucks = async () => {
         try {
-    const response = await axios.get('/api/trucks');
+    const response = await axios.get('/api/foodtrucks');
     setTrucks(response.data);
     } catch (error) {
         console.error('Error fetching trucks data:', error);

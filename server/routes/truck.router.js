@@ -20,7 +20,7 @@ router.get('/api/trucks', async (req, res) => {
 /**
  * Get /api/trucks/:id --> gets a single truck's ID
  */
-router.get('/:id', async (req, res) => {
+router.get('/api/trucks/:id', async (req, res) => {
   try{
     const truck = await truckQueries.getTruckById(req.params.id);
     if (!truck) {
