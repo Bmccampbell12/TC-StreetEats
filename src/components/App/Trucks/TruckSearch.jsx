@@ -31,8 +31,8 @@ fetchTrucks();
 // Filter trucks based on search term and cuisine
 const filteredTrucks = trucks.filter(truck => {
     return (
-        (cuisineFilter === '' || truck.cuisine.toLowerCase().includes(cuisineFilter.toLowerCase())) 
-        && (searchTerm === '' || truck.name.toLowerCase.includes(searchTerm.toLocaleLowerCase()))
+        (cuisineFilter === '' || truck.cuisine.toLowerCase.includes()(cuisineFilter.toLowerCase())) 
+        && (searchTerm === '' || truck.name.toLowerCase.includes()(searchTerm.toLocaleLowerCase()))
     )
 });
 

@@ -1,47 +1,53 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import LogOutButton from '../../../LogOutButton/LogOutButton';
-import './Nav.css';
 import { useSelector } from 'react-redux';
+import './Nav.css';
 
 function Nav() {
-  const user = useSelector((store) => store.user);
+    const user = useSelector((store) => store.user);
 
-  return (
-    <div className="nav">
-      <Link to="/home">
-        <h2 className="nav-title">Twin Cities StreetEats</h2>
-      </Link>
-      <div>
-        {/* If no user is logged in, show these links */}
-        {!user.id && (
-          // If there's no user, show login/registration links
-          <Link className="navLink" to="/login">
-            Login / Register
-          </Link>
-        )}
-
-        {/* If a user is logged in, show these links */}
-        {user.id && (
-          <>
-            <Link className="navLink" to="/user">
-              Home
+    return (
+        <div className="nav">
+            <Link to="/home">
+                <h2 className="nav-title">TC StreetEats</h2>
             </Link>
+            <div>
+                {!user.id && (
+                    <Link className="navLink" to="/login">
+                        Login / Register
+                    </Link>
+                )}
 
-            <Link className="navLink" to="/info">
-              Info Page
-            </Link>
+                <Link className="navLink" to="/review">
+                    Truck Reviews
+                </Link>
 
-            <LogOutButton className="navLink" />
-          </>
-        )}
+                <Link className="navLink" to="/trucks">
+                    Find Trucks
+                </Link>
 
-        <Link className="navLink" to="/about">
-          About
-        </Link>
-      </div>
-    </div>
-  );
+                {user.id && (
+                    <>
+                        <Link className="navLink" to="/user">
+                            My Profile
+                        </Link>
+                        <Link className="navLink" to="/favorites">
+                            My Favorites
+                        </Link>
+                        {user.role === 'vendor' && (
+                            <Link className="navLink" to="/vendor/dashboard">
+                                Vendor Dashboard
+                            </Link>
+                        )}
+                    </>
+                )}
+
+                <Link className="navLink" to="/profile">
+                    User Profile
+                </Link>
+            </div>
+        </div>
+    );
 }
 
 export default Nav;

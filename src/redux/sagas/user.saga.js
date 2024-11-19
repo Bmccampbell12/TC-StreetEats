@@ -1,33 +1,88 @@
+import { put, takeLatest, call } from 'redux-saga/effects';
 import axios from 'axios';
-import { put, takeLatest } from 'redux-saga/effects';
 
-// worker Saga: will be fired on "FETCH_USER" actions
-function* fetchUser() {
+function* loginUser(action) {
   try {
-    const config = {
-      headers: { 'Content-Type': 'application/json' },
-      withCredentials: true,
+    yield put({ type: 'CLEAR_LOGIN_ERROR' });
+    const config = { 
+      headers: { 'Content-Type': 'application/json' }, 
+      withCredentials: true 
     };
-
-    // the config includes credentials which
-    // allow the server session to recognize the user
-    // If a user is logged in, this will return their information
-    // from the server session (req.user)
-    const response = yield axios.get('/api/user', config);
-
-    // now that the session has given us a user object
-    // with an id and username set the client-side user object to let
-    // the client-side code know the user is logged in
-    yield put({ type: 'SET_USER', payload: response.data });
-  } catch (error) {
-    console.log('User get request failed', error);
     
-    yield put({ type: 'FETCH_USER_FAILED', payload: error })
+    const response = yield call(
+      axios.post, 
+      '/api/user/login', 
+      action.payload,
+      config
+    );
+    
+    if (response.status === 200) {
+      // Fetch user details after successful login
+      yield put({ type: 'FETCH_USER' });
+      
+      // Additional role-based routing
+      yield put({ type: 'LOGIN_SUCCESS' });
+      
+      // Conditionally fetch role-specific data
+      if (action.payload.role === 'vendor') {
+        yield put({ type: 'FETCH_VENDOR_TRUCKS' });
+        yield put({ type: 'FETCH_VENDOR_ORDERS' });
+      }
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    const errorMessage = error.response?.data?.message || 'Login failed';
+    yield put({ 
+      type: 'LOGIN_FAILED', 
+      payload: errorMessage 
+    });
   }
 }
 
-function* userSaga() {
+function* logoutUser() {
+  try {
+    const config = { 
+      headers: { 'Content-Type': 'application/json' }, 
+      withCredentials: true 
+    };
+    
+    yield call(axios.post, '/api/user/logout', {}, config);
+    
+    yield put({ type: 'UNSET_USER' });
+    yield put({ type: 'CLEAR_VENDOR_DATA' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    yield put({ type: 'LOGOUT_FAILED' });
+  }
+}
+
+function* fetchUser() {
+  try {
+    const config = { 
+      headers: { 'Content-Type': 'application/json' }, 
+      withCredentials: true 
+    };
+    
+    const response = yield call(axios.get, '/api/user', config);
+    
+    if (response.data) {
+      yield put({ type: 'SET_USER', payload: response.data });
+    }
+  } catch (error) {
+    if (error.response?.status === 403) {
+      yield put({ type: 'UNSET_USER' });
+      yield put({ 
+        type: 'LOGIN_FAILED', 
+        payload: 'Please log in to continue' 
+      });
+    }
+  }
+}
+
+function* authSaga() {
+  yield takeLatest('LOGIN', loginUser);
+  yield takeLatest('LOGOUT', logoutUser);
   yield takeLatest('FETCH_USER', fetchUser);
 }
 
-export default userSaga;
+export default authSaga;

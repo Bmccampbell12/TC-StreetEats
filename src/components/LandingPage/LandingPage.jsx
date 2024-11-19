@@ -13,7 +13,7 @@ function LandingPage() {
     history.push('/login');
   };
 const goToRegister = (role) => {
-  history.push(`/register/${role}`)
+  history.push(`/registration/${role}`)
 };
 
   return (
@@ -21,10 +21,23 @@ const goToRegister = (role) => {
       <h2>{heading}</h2>
 
       <div className="grid">
-        <div className="grid-col grid-col_8">
-          <p>
+      <p>
             Welcome to Twin Cities StreetEats! Register as a User to explore foodtrucks or as a Vendor to manage your food truck profile.
           </p>
+        <div className="grid-col grid-col_8">
+        <img
+          src="documentation/images/Twin-Cities-Street-Eats.png"
+          alt="Twin Cities StreetEats Logo"
+          style={{
+            maxWidth: '250px',
+            height: 'auto',
+            display: 'block',
+            margin: '5px auto'
+          }}
+        />
+        
+         
+
           </div>
           <div className='grid-col grid-col_4'>
             <center>

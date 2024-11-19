@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 5001;
 // Middleware Includes
 const sessionMiddleware = require('./modules/session-middleware');
 const passport = require('./strategies/user.strategy');
-
+const reviewRouter = require('./routes/review.router')
 // Route Includes
 const userRouter = require('./routes/user.router');
 
@@ -28,8 +28,9 @@ app.use(express.urlencoded({extended: true}));
 app.use(express.static('build'));
 
 // Passport Session Configuration
-app.use(sessionMiddleware);
+app.use(sessionMiddleware); 
 
+// app.use('//api/reviews, reviewRouter')
 // Start Passport Sessions
 app.use(passport.initialize());
 app.use(passport.session());

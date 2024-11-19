@@ -1,138 +1,162 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-
 function RegisterForm() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('user');
-  const [truckInfo, setTruckInfo] = useState({
-    name: '',
-    cuisine: '',
-    description: ''
-  });
-  const errors = useSelector((store) => store.errors);
   const dispatch = useDispatch();
+  const { registrationMessage } = useSelector((store) => store.errors);
+
+  const [formData, setFormData] = useState({
+      username: '',
+      password: '',
+      role: 'user',
+      truckInfo: {
+          name: '',
+          cuisine: '',
+          description: ''
+      }
+  });
+
+  const handleInputChange = (e) => {
+      const { name, value } = e.target;
+      
+      if (name.startsWith('truck')) {
+          const truckField = name.replace('truck','').toLowerCase();
+          setFormData(prev => ({
+              ...prev,
+              truckInfo: {
+                  ...prev.truckInfo,
+                  [truckField]: value
+              }
+          }));
+      } else {
+          setFormData(prev => ({
+              ...prev,
+              [name]: value
+          }));
+      }
+  };
 
   const registerUser = (event) => {
-    event.preventDefault();
+      event.preventDefault();
+      
+      const payload = {
+          username: formData.username,
+          password: formData.password,
+          role: formData.role
+      };
 
-    const payload = {
-      username,
-      password,
-      role,
-      ...(role === 'vendor' && { truckInfo })
-    };
-    //event.preventDefault();
-    // Dispatch register action with role from URL param
-    //  if (username.trim() && password.length >= 6) {
-    dispatch({ 
-      type: 'REGISTER', 
-      payload
-     });
+      if (formData.role === 'vendor') {
+          payload.truckInfo = formData.truckInfo;
+      }
 
-    };
-    
+      dispatch({
+          type: 'REGISTER',
+          payload
+      });
+  };
+
   return (
-    <form className="formPanel" onSubmit={registerUser}>
-      <h2>Register { role ==='vendor' ? 'Vendor' : 'user'}</h2>
-      {errors.registrationMessage && (
-        <h3 className="alert" role="alert">
-          {errors.registrationMessage}
-          </h3>
+      <form className="formPanel" onSubmit={registerUser}>
+          <h2>Register {formData.role === 'vendor' ? 'Vendor' : 'User'}</h2>
+          
+          {registrationMessage && (
+              <h3 className="alert" role="alert">
+                  {registrationMessage}
+              </h3>
           )}
 
-      <div>
-        <label htmlFor="role"> 
-          Register as:
-          <select 
-            name="role"
-            value={role}
-            onChange={(event) => setRole(event.target.value)}
-            >
-              <option value="user">User</option> 
-        <option value="vendor">Vendor</option> 
-        </select>
-        </label>
-        </div>
+          <div>
+              <label htmlFor="role">
+                  Register as:
+                  <select 
+                      name="role"
+                      value={formData.role}
+                      onChange={handleInputChange}
+                  >
+                      <option value="user">User</option>
+                      <option value="vendor">Vendor</option>
+                  </select>
+              </label>
+          </div>
 
-      <div>
-        <label htmlFor="username"> 
-          Username:
-          <input
-            type="text"
-            name="username"
-            value={username}
-            required
-            onChange={(event) => setUsername(event.target.value)}
-          />
-          </label>
-        </div>
+          <div>
+              <label htmlFor="username">
+                  Username:
+                  <input
+                      type="text"
+                      name="username"
+                      value={formData.username}
+                      required
+                      onChange={handleInputChange}
+                  />
+              </label>
+          </div>
 
-      <div>
-        <label htmlFor="password">
-          Password:
-          <input
-            type="password"
-            name="password"
-            value={password}
-            required
-            onChange={(event) => setPassword(event.target.value)}
-          />
-          </label>
-        </div>
+          <div>
+              <label htmlFor="password">
+                  Password:
+                  <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      required
+                      minLength="8"
+                      onChange={handleInputChange}
+                  />
+              </label>
+          </div>
 
-{role === 'vendor' && ( 
-  <div className="vendor-fields">
-  <div>
-    <label htmlFor="truckName">
-      Food Truck Name:
-      <input 
-      type="text"
-      name="truckName"
-      value={truckInfo.name}
-      required
-      onChange={(event) => setTruckInfo({...truckInfo, name: event.target.value})}
-    />
-  </label>
-</div>
-      
-      <div>
-      <label htmlFor="cuisine">
-        Cuisine Type:
-      <input 
-        type="text" 
-        name="cuisine" 
-        value={truckInfo.cuisine}
-        required
-        onChange={(event) => setTruckInfo({...truckInfo, cuisine: event.target.value})} 
-        /> 
-        </label>
-      </div>
+          {formData.role === 'vendor' && (
+              <div className="vendor-fields">
+                  <div>
+                      <label htmlFor="truckname">
+                          Food Truck Name:
+                          <input
+                              type="text"
+                              name="truckname"
+                              value={formData.truckInfo.name}
+                              required
+                              onChange={handleInputChange}
+                          />
+                      </label>
+                  </div>
 
-      <div>
-        <label htmlFor="description">
-          Description:
-          <textarea
-          name="description"
-          value={truckInfo.description}
-          onChange={(event) => setTruckInfo({...truckInfo, description: event.target.value})}
-          />
-        </label>
-      </div>
-      </div>
-  )}
+                  <div>
+                      <label htmlFor="truckcuisine">
+                          Cuisine Type:
+                          <input
+                              type="text"
+                              name="truckcuisine"
+                              value={formData.truckInfo.cuisine}
+                              required
+                              onChange={handleInputChange}
+                          />
+                      </label>
+                  </div>
 
-  <div>
-    <input
-    className="btn"
-    type="submit"
-    name="submit"
-    value={role === 'vendor' ? 'Register Truck' : 'Register'}
-    />
-  </div>
-  </form>
-  )
+                  <div>
+                      <label htmlFor="truckdescription">
+                          Description:
+                          <textarea
+                              name="truckdescription"
+                              value={formData.truckInfo.description}
+                              onChange={handleInputChange}
+                          />
+                      </label>
+                  </div>
+              </div>
+          )}
+
+          <div>
+              <input
+                  className="btn"
+                  type="submit"
+                  name="register"
+                  value={formData.role === 'vendor' ? 'Register Truck' : 'Register'}
+              />
+          </div>
+      </form>
+  );
 }
 
 export default RegisterForm;

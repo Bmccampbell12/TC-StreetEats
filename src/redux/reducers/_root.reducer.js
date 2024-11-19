@@ -3,7 +3,7 @@ import errors from './errors.reducer';
 import user from './user.reducer';
 import truck from './truck.reducer.js';
 // import userPreferences from '/Users/brucemccampbell/PRIME/week14/TC-StreetEats/src/components/App/UserDashboard/UserPreferences.jsx';
-// import reviews from './user.reducer';
+ import reviewReducer from './review.reducer.js'
 // import menu from './user.reducer';
 // import favorites from './user.reducer';
 
@@ -17,9 +17,12 @@ import truck from './truck.reducer.js';
 // Lets make a bigger object for our store, with the objects from our reducers.
 // This is what we get when we use 'state' inside of 'mapStateToProps'
 const rootReducer = combineReducers({
+  review: reviewReducer,
   errors, // contains registrationMessage and loginMessage
   user,
-  truck, // will have an id and username if someone is logged in
+  truck
+  
+  // will have an id and username if someone is logged in
 });
 
 export default rootReducer;
