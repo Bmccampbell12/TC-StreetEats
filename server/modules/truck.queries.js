@@ -100,7 +100,7 @@ const truckQueries = {
 
     }
     const query = `
-    DELETE FROM "Trucks"
+    DELETE FROM "trucks"
     WHERE id = $1
     RETURNING *;
     `;

@@ -1,9 +1,3 @@
--- USER is a reserved keyword with Postgres
--- You must use double quotes in every query that user is in:
--- ex. SELECT * FROM "user";
--- Otherwise you will have errors!
-CREATE TABLE "user" (
-    "id" SERIAL PRIMARY KEY,
     "username" VARCHAR (80) UNIQUE NOT NULL,
     "password" VARCHAR (1000) NOT NULL
 );
@@ -14,7 +8,6 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"role" VARCHAR(20) DEFAULT 'user',
 	PRIMARY KEY ("id")
 );
-
 CREATE TABLE IF NOT EXISTS "Trucks" (
 	"id" serial NOT NULL UNIQUE,
 	"name" varchar(80) NOT NULL UNIQUE,
@@ -23,14 +16,12 @@ CREATE TABLE IF NOT EXISTS "Trucks" (
 	"vendor_id" bigint NOT NULL,
 	PRIMARY KEY ("id")
 );
-
 CREATE TABLE IF NOT EXISTS "favorites" (
 	"id" serial NOT NULL UNIQUE,
 	"user_id" bigint NOT NULL,
 	"truck_id" bigint NOT NULL,
 	PRIMARY KEY ("id")
 );
-
 CREATE TABLE IF NOT EXISTS "user_preferences" (
 	"user_id" serial NOT NULL UNIQUE,
 	"cuisine_preferences" varchar(255) NOT NULL,
@@ -39,7 +30,6 @@ CREATE TABLE IF NOT EXISTS "user_preferences" (
 	"search_area" INTEGER NOT NULL DEFAULT '5000',
 	PRIMARY KEY ("user_id")
 );
-
 CREATE TABLE IF NOT EXISTS "truck_menu" (
 	"id" serial NOT NULL UNIQUE,
 	"truck_id" bigint NOT NULL,
@@ -50,7 +40,6 @@ CREATE TABLE IF NOT EXISTS "truck_menu" (
 	"is_available" boolean NOT NULL DEFAULT true,
 	PRIMARY KEY ("id")
 );
-
 CREATE TABLE IF NOT EXISTS "reviews" (
 	"id" serial NOT NULL UNIQUE,
 	"truck_id" bigint NOT NULL,
@@ -61,13 +50,11 @@ CREATE TABLE IF NOT EXISTS "reviews" (
 	"time_stamp" timestamp with time zone NOT NULL,
 	PRIMARY KEY ("id")
 );
-
 CREATE TABLE IF NOT EXISTS "menu" (
 	"id" serial NOT NULL UNIQUE,
 	"new_field" bigint NOT NULL,
 	PRIMARY KEY ("id")
 );
-
 CREATE TABLE IF NOT EXISTS "DietaryRestrictions" (
 	"id" serial NOT NULL UNIQUE,
 	"Vegetarian" varchar(255) NOT NULL,
@@ -76,20 +63,15 @@ CREATE TABLE IF NOT EXISTS "DietaryRestrictions" (
 	"Paleo" varchar(255) NOT NULL,
 	PRIMARY KEY ("id")
 );
-
 ALTER TABLE "users" ADD CONSTRAINT "users_fk3" FOREIGN KEY ("user_role") REFERENCES "Trucks"("id");
 ALTER TABLE "Trucks" ADD CONSTRAINT "Trucks_fk1" FOREIGN KEY ("name") REFERENCES "favorites"("id");
-
 ALTER TABLE "Trucks" ADD CONSTRAINT "Trucks_fk4" FOREIGN KEY ("vendor_id") REFERENCES "users"("id");
 ALTER TABLE "favorites" ADD CONSTRAINT "favorites_fk1" FOREIGN KEY ("user_id") REFERENCES "users"("id");
 ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_fk0" FOREIGN KEY ("user_id") REFERENCES "users"("id");
 ALTER TABLE "truck_menu" ADD CONSTRAINT "truck_menu_fk1" FOREIGN KEY ("truck_id") REFERENCES "Trucks"("id");
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_fk1" FOREIGN KEY ("truck_id") REFERENCES "users"("id");
-
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_fk2" FOREIGN KEY ("user_id") REFERENCES "food_trucks"("id");
-
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_fk3" FOREIGN KEY ("rating") REFERENCES "Trucks"("id");
-
 INSERT INTO "Trucks" ("name", "cuisine", "location", "vendor_id")
 VALUES
     ('Best Steak & Gyros House', 'Mediterranean', 44.977753, 1000001),
@@ -118,5 +100,3 @@ VALUES
     ALTER TABLE users
 ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user'
 ;
-
-

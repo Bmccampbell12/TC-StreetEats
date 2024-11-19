@@ -5,21 +5,24 @@ const initialState = {
       error: null
 };
 
-function truckReducer(state = initialState, action) {
+const truckReducer = (state = initialState, action) => {
     switch (action.type) {
-        case 'FETCH_TRUCKS_REQUEST':
+        case 'SET_TRUCKS':
             return {...state, 
                 allTrucks: action.payload,
+                error: null,
             };
             case 'FETCH_TRUCKS_FAILURE':
                 return {
                     ...state,
                     error: action.payload,
+                    loading: false
                 };
                 case 'SET_SELECTED_TRUCK':
                     return {
                         ...state,
-                        selectedTruck: action.payload
+                        selectedTruck: action.payload,
+                        error: null
                     };
                     case 'CLEAR_SELECTED_TRUCK':
                         return {
@@ -34,6 +37,22 @@ function truckReducer(state = initialState, action) {
                                 ),
                                 selectedTruck: action.payload
                             };
+                            case 'SET_MAP_CENTER':
+                                return {
+                                    ...state,
+                                    mapCenter: action.payload
+                                };
+                    
+                            case 'TOGGLE_FAVORITE_SUCCESS':
+                                return {
+                                    ...state,
+                                    allTrucks: state.allTrucks.map(truck =>
+                                        truck.id === action.payload
+                                            ? { ...truck, isFavorite: !truck.isFavorite }
+                                            : truck
+                                    )
+                                    
+                                };
 
                                 default:
                                     return state;

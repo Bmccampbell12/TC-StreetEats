@@ -1,70 +1,84 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import {useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 function LoginForm() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const errors = useSelector(store => store.errors);
-  const dispatch = useDispatch();
-
-  const login = (event) => {
-    event.preventDefault();
-
-    if (username && password) {
-      dispatch({
-        type: 'LOGIN',
-        payload: {
-          username: username,
-          password: password,
-        },
-      });
-    } else {
-      dispatch({ type: 'LOGIN_INPUT_ERROR' });
-    }
-  }; // end login
-
-  return (
+    const [credentials, setCredentials] = useState({
+        username: '',
+        password: ''
+    });
     
-    <form className="formPanel" onSubmit={login}>
-    <h3>Welcome to Twin Cities StreetEats!</h3>
-    <h2>User Login</h2>
+    const dispatch = useDispatch();
+    const errors = useSelector(state => state.errors);
 
-      {errors.loginMessage && (
-        <h3 className="alert" role="alert">
-          {errors.loginMessage}
-        </h3>
-        
-      )}
-      
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setCredentials(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
-      <div>
-        <label htmlFor="username">Username:</label>
-          <input
-            type="text"
-            name="username"
-            required
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-          />
-      </div>
+    const handleSubmit = (role) => (event) => {
+        event.preventDefault();
+        dispatch({
+            type: 'LOGIN',
+            payload: {
+                ...credentials,
+                role
+            }
+        });
+    };
 
-      <div>
-        <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            name="password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-      </div>
-        
-        <input className="btn" type="submit" name="submit" value="User Log In" />
-        <h3>Or</h3>
-        <input className="btn" type="submit" name="submit" value="Log In as Vendor" />
-    </form>
-  );
+    return (
+        <form className="login-form" onSubmit={handleSubmit('user')}>
+            <h3>Welcome to Twin Cities StreetEats!</h3>
+            <h2>User Login</h2>
+
+            {errors.loginMessage && (
+                <h3 className="alert" role="alert">
+                    {errors.loginMessage}
+                </h3>
+            )}
+
+            <div>
+                <label htmlFor="username">Username:</label>
+                <input
+                    type="text"
+                    name="username"
+                    required
+                    value={credentials.username}
+                    onChange={handleInputChange}
+                />
+            </div>
+
+            <div>
+                <label htmlFor="password">Password:</label>
+                <input
+                    type="password"
+                    name="password"
+                    required
+                    value={credentials.password}
+                    onChange={handleInputChange}
+                />
+            </div>
+
+            <input 
+                className="btn" 
+                type="submit" 
+                value="User Log In" 
+            />
+            
+            <h3>Or</h3>
+            
+            <button 
+                className="btn" 
+                onClick={handleSubmit('vendor')}
+                type="button"
+            >
+                Log In as Vendor
+            </button>
+        </form>
+    );
 }
 
 export default LoginForm;

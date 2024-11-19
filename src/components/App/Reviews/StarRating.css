@@ -1,0 +1,18 @@
+.star-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.star {
+    transition: color 0.2s ease-in-out;
+}
+
+.star.filled {
+    color: #ffc107;
+}
+
+.star.empty {
+    color: #e4e5e9;
+}
+

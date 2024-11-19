@@ -6,6 +6,7 @@ let pool;
 // to set the connection info: web address, username/password, db name
 // eg: 
   //DATABASE_URL=postgresql://brucemccampbell:zd_NYUA8xamsRTV4%26ED%2BB2.db.com/street_eats
+  
 
 if (process.env.DATABASE_URL) {
     pool = new pg.Pool({
@@ -13,7 +14,7 @@ if (process.env.DATABASE_URL) {
         
         ssl: {
             rejectUnauthorized: false},
-        connectionTimeoutMillis: 20000, // 10 second timeout
+        connectionTimeoutMillis: 10000, // 10 second timeout
         idleTimeoutMillis: 30000  // 30 second idle timeout
     });
 }
@@ -25,7 +26,10 @@ else {
         host: 'localhost',
         port: 5432,
         database: 'street_eats',
+        // user: process.env.DB_USER,
+        // password: process.env.DB_PASSWORD
     });
 }
+// Add a function to test database connection
 
 module.exports = pool;

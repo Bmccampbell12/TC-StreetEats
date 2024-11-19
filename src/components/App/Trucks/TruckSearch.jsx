@@ -18,7 +18,7 @@ const TruckSearch = () => {
 useEffect(() => {
     const fetchTrucks = async () => {
         try {
-    const response = await axios.get('/api/foodtrucks');
+    const response = await axios.get('/api/trucks');
     setTrucks(response.data);
     } catch (error) {
         console.error('Error fetching trucks data:', error);
@@ -31,8 +31,8 @@ fetchTrucks();
 // Filter trucks based on search term and cuisine
 const filteredTrucks = trucks.filter(truck => {
     return (
-        (cuisineFilter === '' || truck.cuisine.toLowerCase().includes(cuisineFilter.toLowerCase())) 
-        && (searchTerm === '' || truck.name.toLowerCase.includes(searchTerm.toLocaleLowerCase()))
+        (cuisineFilter === '' || truck.cuisine.toLowerCase.includes()(cuisineFilter.toLowerCase())) 
+        && (searchTerm === '' || truck.name.toLowerCase.includes()(searchTerm.toLocaleLowerCase()))
     )
 });
 
