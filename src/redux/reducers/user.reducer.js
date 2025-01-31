@@ -1,55 +1,58 @@
+// userReducer: Handles the state of the user
 const initialState = {
     id: null,
     username: null,
     role: null,
     isAuthenticated: false,
-    preferences: null, // Add preferences field to initialState
-    error: null // Initialize error field
-  }
+    preferences: null,
+    error: null
+  };
   
+  // userReducer function: Updates the user state based on the action type
   const userReducer = (state = initialState, action) => {
-    
     switch (action.type) {
-        case 'SET_USER':
-            // Ensure payload has necessary fields (id, username, etc.)
-            if (!action.payload || !action.payload.id || !action.payload.username) {
-                return state; // Or handle this case (e.g., dispatch an error)
-            }
-            return {
-                 ...state,
-                 ...action.payload,
-                 isAuthenticated: true
-            };
+      case 'SET_USER':
+        // Check if the payload has the necessary fields
+        if (!action.payload || !action.payload.id || !action.payload.username) {
+          return state;
+        }
   
-        case 'FETCH_USER_FAILED':
-            return {
-                ...state,
-                isAuthenticated: false,
-                error: action.payload
-            };
+        // Update the user state
+        return {
+          ...state,
+          ...action.payload,
+          isAuthenticated: true
+        };
   
-        case 'UPDATE_USER_PREFERENCES':
-            return {
-                ...state,
-                preferences: action.payload
-            };
+      case 'FETCH_USER_FAILED':
+        // Update the user state with an error
+        return {
+          ...state,
+          isAuthenticated: false,
+          error: action.payload
+        };
   
-        case 'UNSET_USER':
-            return {
-                ...initialState, // Reset to initial state
-                isAuthenticated: false // Explicitly set to false
-            };
+      case 'UPDATE_USER_PREFERENCES':
+        // Update the user preferences
+        return {
+          ...state,
+          preferences: action.payload
+        };
   
-        case 'SET_USER_ROLE':
-            return {
-                ...state,
-                role: action.payload
-            };
+      case 'UNSET_USER':
+        // Reset the user state
+        return initialState;
   
-        default:
-            return state;
+      case 'SET_USER_ROLE':
+        // Update the user role
+        return {
+          ...state,
+          role: action.payload
+        };
+  
+      default:
+        return state;
     }
   };
   
   export default userReducer;
-  

@@ -1,90 +1,123 @@
-// user.router.js: Enhanced Authentication Routes
 const express = require('express');
-const router = express.Router();
-const { body, validationResult } = require('express-validator');
-const passport = require('../strategies/user.strategy');
-const pool = require('../modules/pool');
+const {
+  rejectUnauthenticated,
+} = require('../modules/authentication-middleware');
 const encryptLib = require('../modules/encryption');
+const pool = require('../modules/pool');
+const userStrategy = require('../strategies/user.strategy');
+const router = express.Router();
 
-// Validation middleware
-const validateLogin = [
-  body('username').isEmail().withMessage('Invalid email format'),
-  body('password').notEmpty().withMessage('Password is required')
-];
+/**
+ * GET /api/user
+ * Get user information if authenticated
+ * @returns {Object} user object from session
+ */
+router.get('/', rejectUnauthenticated, (req, res) => {
+  res.send(req.user);
+});
 
-// Login Route with Enhanced Error Handling
-router.post('/login', validateLogin, (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+/**
+ * POST /api/user/register
+ * Register a new user
+ * @param {string} username - The username
+ * @param {string} password - The password
+ * @returns {number} user id
+ */
+router.post('/register', async (req, res) => {
+  try {
+    const { username, password, role = 'user' } = req.body;
 
-  passport.authenticate('local', (err, user, info) => {
-    if (err) {
-      return res.status(500).json({ message: 'Authentication error' });
+    // Input validation
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
     }
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    if (username.length < 3 || password.length < 6) {
+      return res.status(400).json({ 
+        message: 'Username must be at least 3 characters and password must be at least 6 characters' 
+      });
     }
+
+    // Check if username already exists
+    const checkUser = await pool.query('SELECT id FROM "users" WHERE username = $1', [username]);
+    if (checkUser.rows.length > 0) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+
+    const encryptedPassword = encryptLib.encryptPassword(password);
+    const queryText = `
+      INSERT INTO "users" (username, password, role)
+      VALUES ($1, $2, $3)
+      RETURNING id
+    `;
     
+    const result = await pool.query(queryText, [username, encryptedPassword, role]);
+    res.status(201).json({ id: result.rows[0].id });
+  } catch (error) {
+    console.error('User registration failed:', error);
+    res.status(500).json({ message: 'Internal server error during registration' });
+  }
+});
+
+/**
+ * POST /api/user/login
+ * Login user with provided credentials
+ * Uses passport local strategy for authentication
+ */
+router.post('/login', (req, res, next) => {
+  console.log('Login request received:', { 
+    username: req.body.username,
+    role: req.body.role 
+  });
+
+  userStrategy.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.error('Authentication error:', err);
+      return res.status(500).json({ 
+        message: 'Internal server error during login',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
+    }
+
+    if (!user) {
+      console.log('Login failed:', info?.message || 'Unknown reason');
+      return res.status(401).json({ 
+        message: info?.message || 'Invalid username or password' 
+      });
+    }
+
+    // Manually establish the session
     req.login(user, (loginErr) => {
       if (loginErr) {
-        return res.status(500).json({ message: 'Session creation failed' });
+        console.error('Session error:', loginErr);
+        return res.status(500).json({ 
+          message: 'Error establishing session',
+          details: process.env.NODE_ENV === 'development' ? loginErr.message : undefined
+        });
       }
-      res.json({ 
-        id: user.id, 
-        username: user.username, 
-        role: user.role 
+
+      console.log('Login successful for user:', user.username);
+      res.json({
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        isAuthenticated: true
       });
     });
   })(req, res, next);
 });
 
-// Registration Route with Improved Validation
-router.post('/register', [
-  body('username').isEmail().withMessage('Invalid email'),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { username, password, role = 'user' } = req.body;
-
-  try {
-    const existingUser = await pool.query(
-      'SELECT * FROM "user" WHERE username = $1', 
-      [username]
-    );
-
-    if (existingUser.rows.length > 0) {
-      return res.status(409).json({ message: 'Username already exists' });
+/**
+ * POST /api/user/logout
+ * Log out the user
+ * Clears the session
+ */
+router.post('/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ message: 'Error during logout' });
     }
-
-    const encryptedPassword = encryptLib.encryptPassword(password);
-    await pool.query(
-      'INSERT INTO "user" (username, password, role) VALUES ($1, $2, $3)', 
-      [username, encryptedPassword, role]
-    );
-
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Registration failed' });
-  }
-});
-
-// Secure User Retrieval
-router.get('/', (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(403).json({ message: 'Not authenticated' });
-  }
-  
-  res.json({
-    id: req.user.id,
-    username: req.user.username,
-    role: req.user.role
+    res.sendStatus(200);
   });
 });
 

@@ -16,37 +16,70 @@ const warnings = require('../constants/warnings');
 */
 
 const serverSessionSecret = () => {
-  if (
-    !process.env.SERVER_SESSION_SECRET ||
-    process.env.SERVER_SESSION_SECRET.length <8 ||
-    process.env.SERVER_SESSION_SECRET === warnings.exampleBadSecret
-  ) {
+  const secret = process.env.SERVER_SESSION_SECRET;
+  if (!secret || secret.length < 8 || secret === warnings.exampleBadSecret) {
     // Warning if user doesn't have a good secret
-    console.log(warnings.badSecret);
-
+    console.error(warnings.badSecret);
+    
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Missing SERVER_SESSION_SECRET. Please set this in your .env file.');
+    }
   }
 
-  return process.env.SERVER_SESSION_SECRET;
+  return secret || 'dev_secret_for_testing_only';
 };
 
-let pruneSessionInterval = 60;
-if (process.env.NODE_ENV === 'test') {
-    pruneSessionInterval = false;
-}
+// Create session table if it doesn't exist
+const createSessionTable = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "session" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+      )
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire")
+    `);
+    console.log('Session table verified/created successfully');
+  } catch (error) {
+    console.error('Error creating session table:', error);
+    throw error;
+  }
+};
+
+// Configure session store
+const sessionStore = new PgSession({
+  pool,
+  createTableIfMissing: true,
+  tableName: 'session',
+  pruneSessionInterval: process.env.NODE_ENV === 'test' ? false : 60 * 60
+});
+
+// Handle session store errors
+sessionStore.on('error', (error) => {
+  console.error('Session store error:', error);
+});
+
+// Create session table before exporting middleware
+createSessionTable().catch(error => {
+  console.error('Failed to create session table:', error);
+  process.exit(1);
+});
+
+// Export session middleware
 module.exports = expressSession({
-    store: new PgSession({
-        pool,
-        createTableIfMissing: true,
-        pruneSessionInterval,
-    }),
-    secret: serverSessionSecret() || 'secret', // please set this in your .env file
-    name: 'user', // this is the name of the req.variable. 'user' is convention, but not required
-    saveUninitialized: false,
-    resave: false,
-    // This isn't currently being used but should be left in for future proofing
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7, // cookie expires after 7 days 
-      httpOnly: true, // prevents client-side JS from accessing cookie 
-      secure: false // can only be set to true if the app uses https
-    },
+  store: sessionStore,
+  secret: serverSessionSecret(),
+  name: 'user', // this is the name of the req.variable. 'user' is convention
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  }
 });

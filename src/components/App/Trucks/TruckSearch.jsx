@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import axios from 'axios';
@@ -11,75 +12,68 @@ const truckIcon = new L.icon({
 });
 
 const TruckSearch = () => {
-    const [trucks, setTrucks] = useState([]);
+    const dispatch = useDispatch();
+    const trucks = useSelector((state) => state.truck.allTrucks);
     const [cuisineFilter, setCuisineFilter] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
-useEffect(() => {
-    const fetchTrucks = async () => {
-        try {
-    const response = await axios.get('/api/trucks');
-    setTrucks(response.data);
-    } catch (error) {
-        console.error('Error fetching trucks data:', error);
-    }
-};
+    useEffect(() => {
+        dispatch({ type: 'FETCH_TRUCKS' });
+    }, [dispatch]);
 
-fetchTrucks();
-}, []);
+    // Filter trucks based on search term and cuisine
+    const filteredTrucks = trucks.filter(truck => {
+        return (
+            (cuisineFilter === '' || truck.cuisine_type.toLowerCase().includes(cuisineFilter.toLowerCase())) 
+            && (searchTerm === '' || truck.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+    });
 
-// Filter trucks based on search term and cuisine
-const filteredTrucks = trucks.filter(truck => {
+    console.log('All trucks:', trucks);
+    console.log('Filtered trucks:', filteredTrucks);
+
     return (
-        (cuisineFilter === '' || truck.cuisine.toLowerCase.includes()(cuisineFilter.toLowerCase())) 
-        && (searchTerm === '' || truck.name.toLowerCase.includes()(searchTerm.toLocaleLowerCase()))
-    )
-});
+        <div className="food-truck-search">
+            <h1>Food Truck Finder</h1>
+            <div className="filters">
+                <input
+                    type="text"
+                    placeholder="Filter by name"
+                    value={searchTerm}
+                    onChange={event => setSearchTerm(event.target.value)}
+                />
+                <input 
+                    type="text"
+                    placeholder="Filter by cuisine"
+                    value={cuisineFilter}
+                    onChange={event => setCuisineFilter(event.target.value)}
+                />
+            </div>
 
-return (
-    <div className="food-truck-search">
-        <h1>Food Truck Finder</h1>
-        <div className="filters">
-            <input
-            type="text"
-            placeholder="Filter by name"
-            value={searchTerm}
-            onChange={event => setSearchTerm(event.target.value)}
-            />
-        
+            {/*Map display with Leaflet API */}
+            <MapContainer center={[44.9778, -93.2650]} zoom={13} style={{ height: "500px", width: "100%" }}>
+                <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution="&copy; OpenStreetMap contributors"
+                />
 
-        <input 
-        type="text"
-        placeholder="Filter by cuisine"
-        value={cuisineFilter}
-        onChange={event => setCuisineFilter(event.target.value)}
-        />
-    </div>
-
-{/*Map display with Leaflet API */}
-
-<MapContainer center={[44.9778, -93.2650]} zoom={13} style={{ height: "500px", width: "100%" }}>
-<TileLayer
-url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-attribution="&copy; OpenStreetMap contributors"
-/>
-
-{filteredTrucks.map(truck => (
-    truck.latitude && truck.longitude && (
-    <Marker
-    key={truck.id}
-    position={[truck.latitude, truck.longitude]}>
-
-        <Popup>
-            <h3>{truck.name}</h3>
-            <p>Cuisine:{truck.cuisine}</p>
-        </Popup>
-      </Marker>
-        )
-     ))}
-   </MapContainer>
-  </div>
- )
-}
+                {filteredTrucks.map(truck => (
+                    truck.latitude && truck.longitude && (
+                        <Marker
+                            key={truck.id}
+                            position={[truck.latitude, truck.longitude]}
+                            icon={truckIcon}>
+                            <Popup>
+                                <h3>{truck.name}</h3>
+                                <p>Cuisine: {truck.cuisine_type}</p>
+                                <p>{truck.description}</p>
+                            </Popup>
+                        </Marker>
+                    )
+                ))}
+            </MapContainer>
+        </div>
+    );
+};
 
 export default TruckSearch;

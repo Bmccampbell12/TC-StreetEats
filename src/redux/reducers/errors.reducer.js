@@ -9,7 +9,8 @@ const loginMessage = (state = '', action) => {
     case 'LOGIN_INPUT_ERROR':
       return 'Enter your username and password!';
     case 'LOGIN_FAILED':
-      return "Oops! The username and password didn't match. Try again!";
+      // Use the custom error message from the saga if available
+      return action.payload || "Oops! The username and password didn't match. Try again!";
     case 'LOGIN_FAILED_NO_CODE':
       return 'Oops! Something went wrong! Is the server running?';
     default:
@@ -26,7 +27,8 @@ const registrationMessage = (state = '', action) => {
     case 'REGISTRATION_INPUT_ERROR':
       return 'Choose a username and password!(6 or more characters)';
     case 'REGISTRATION_FAILED':
-      return "Oops! That didn't work. The username might already be taken. Try again!";
+      // Use the custom error message if available
+      return action.payload || "Oops! That didn't work. The username might already be taken. Try again!";
     default:
       return state;
   }

@@ -4,62 +4,80 @@ const encryptLib = require('../modules/encryption');
 const pool = require('../modules/pool');
 
 passport.serializeUser((user, done) => {
+  console.log('Serializing user:', user.id);
   done(null, user.id);
 });
 
 passport.deserializeUser((id, done) => {
+  console.log('Deserializing user:', id);
   pool
-    .query('SELECT * FROM "user" WHERE id = $1', [id])
+    .query('SELECT * FROM "users" WHERE id = $1', [id])
     .then((result) => {
-      // Handle Errors
       const user = result && result.rows && result.rows[0];
-
       if (user) {
-        // user found
-        delete user.password; // remove password so it doesn't get sent
-        // done takes an error (null in this case) and a user
+        delete user.password;
+        console.log('Found user:', user.username);
         done(null, user);
       } else {
-        // user not found
-        // done takes an error (null in this case) and a user (also null in this case)
-        // this will result in the server returning a 401 status code
+        console.log('User not found in deserialize');
         done(null, null);
       }
     })
     .catch((error) => {
-      console.log('Error with query during deserializing user ', error);
-      // done takes an error (we have one) and a user (null in this case)
-      // this will result in the server returning a 500 status code
+      console.error('Error in deserializeUser:', error);
       done(error, null);
     });
 });
 
-// Does actual work of logging in
 passport.use(
   'local',
-  new LocalStrategy((username, password, done) => {
-    pool
-      .query('SELECT * FROM "user" WHERE username = $1', [username])
-      .then((result) => {
+  new LocalStrategy(
+    {
+      usernameField: 'username',
+      passwordField: 'password',
+      passReqToCallback: true
+    },
+    async (req, username, password, done) => {
+      console.log('Starting authentication for user:', username);
+      console.log('Request body:', req.body);
+      
+      try {
+        const result = await pool.query('SELECT * FROM "users" WHERE username = $1', [username]);
+        console.log('Database query result:', result.rows.length ? 'User found' : 'No user found');
+        
         const user = result && result.rows && result.rows[0];
-        if (user && encryptLib.comparePassword(password, user.password)) {
-          // All good! Passwords match!
-          // done takes an error (null in this case) and a user
-          done(null, user);
-        } else {
-          // Not good! Username and password do not match.
-          // done takes an error (null in this case) and a user (also null in this case)
-          // this will result in the server returning a 401 status code
-          done(null, null);
+        
+        if (!user) {
+          console.log('No user found with username:', username);
+          return done(null, false, { message: 'Incorrect username or password' });
         }
-      })
-      .catch((error) => {
-        console.log('Error with query for user ', error);
-        // done takes an error (we have one) and a user (null in this case)
-        // this will result in the server returning a 500 status code
-        done(error, null);
-      });
-  })
+
+        // If role is specified, verify it matches
+        if (req.body.role && user.role !== req.body.role) {
+          console.log('Role mismatch. Expected:', req.body.role, 'Got:', user.role);
+          return done(null, false, { message: 'Invalid role for this user' });
+        }
+
+        // Verify password
+        const isValidPassword = encryptLib.comparePassword(password, user.password);
+        console.log('Password validation result:', isValidPassword);
+
+        if (!isValidPassword) {
+          console.log('Invalid password for user:', username);
+          return done(null, false, { message: 'Incorrect username or password' });
+        }
+
+        // Remove password before sending to client
+        delete user.password;
+        console.log('Authentication successful for user:', username);
+        return done(null, user);
+      } catch (error) {
+        console.error('Error in local strategy:', error);
+        console.error('Stack trace:', error.stack);
+        return done(error);
+      }
+    }
+  )
 );
 
 module.exports = passport;
