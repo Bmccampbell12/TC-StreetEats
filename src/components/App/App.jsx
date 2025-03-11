@@ -2,10 +2,10 @@ import React, { useEffect } from 'react';
 import { HashRouter as Router, Redirect, Route, Switch } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
-import Nav from '/Users/brucemccampbell/PRIME/week14/TC-StreetEats/src/components/App/Layout/Nav/Nav.jsx';
-import Footer from '/Users/brucemccampbell/PRIME/week14/TC-StreetEats/src/components/App/Layout/Footer/Footer.jsx';
+import Nav from './Layout/Nav/Nav.jsx';
+import Footer from '../App/Layout/Footer/Footer.jsx';
 
-import LoginPage from '/Users/brucemccampbell/PRIME/week14/TC-StreetEats/src/components/App/Auth/LoginPage/LoginPage.jsx';
+import LoginPage from '../App/Auth/LoginPage/LoginPage.jsx';
 import RegisterPage from './Auth/RegisterPage/RegisterPage.jsx';
 import RegisterForm from './Auth/RegisterForm/RegisterForm.jsx'
 
@@ -14,7 +14,7 @@ import UserPage from '../UserPage/UserPage';
 import LandingPage from '../LandingPage/LandingPage';
 import TruckSearch from './Trucks/TruckSearch';
 import TruckDetail from './Trucks/TruckDetail';
-import ReviewPage from '/Users/brucemccampbell/PRIME/week14/TC-StreetEats/src/components/App/Reviews/ReviewPage.jsx';
+import ReviewPage from '../App/Reviews/ReviewPage.jsx';
 import TruckMap from './Trucks/TruckMap' 
 import ReviewConfirmationPage from './Reviews/ReviewConfirmationPage';
 import './App.css';
